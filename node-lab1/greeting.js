@@ -1,6 +1,10 @@
 const greeting = {
     en: "Hello World!",
-    fr: "Bonjour!"
+    fr: "Bonjour!",
+    ga: "Dia duit!",
+    ms: "Apa Khabar!",
+    th: "สวัสดี"
+
 };
 
 export default greeting;
