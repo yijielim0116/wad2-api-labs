@@ -1,2 +1,3 @@
 # wad2-api-labs
-Practical Labs for the WAD module
+
+Practical Labs for the WAD2 module
