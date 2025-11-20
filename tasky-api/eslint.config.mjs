@@ -13,6 +13,7 @@ export default [
     rules: {
       "semi": 1,
       "no-console": "off",
+      "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     },
   },
   pluginJs.configs.recommended,
