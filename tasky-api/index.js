@@ -4,6 +4,9 @@ import tasksRouter from './api/tasks';
 import './db';
 // other imports
 import cors from 'cors';
+//... other imports
+import usersRouter from './api/users';
+
 
 dotenv.config();
 
@@ -28,8 +31,13 @@ app.use(express.json());
 
 app.use('/api/tasks', tasksRouter);
 
+//Users router
+app.use('/api/users', usersRouter);
+
 app.use(errHandler);
 
 app.listen(port, () => {
   console.info(`Server running at ${port}`);
 });
+
+console.log("MONGO_DB:", process.env.MONGO_DB);
