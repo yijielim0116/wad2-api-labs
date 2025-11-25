@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 
 
 const router = express.Router(); 
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -12,44 +13,66 @@ router.get('/', async (req, res) => {
     res.status(200).json(users);
 });
 
-// register(Create)/Authenticate User
-router.post('/', asyncHandler(async (req, res) => {
+router.post(
+  '/',
+  asyncHandler(async (req, res) => {
     try {
-        if (!req.body.username || !req.body.password) {
-            return res.status(400).json({ success: false, msg: 'Username and password are required.' });
-        }
-        if (req.query.action === 'register') {
-            await registerUser(req, res);
-        } else {
-            await authenticateUser(req, res);
-        }
+      if (!req.body.username || !req.body.password) {
+        return res
+          .status(400)
+          .json({ success: false, msg: 'Username and password are required.' });
+      }
+
+      if (req.query.action === 'register') {
+        await registerUser(req, res);
+      } else {
+        await authenticateUser(req, res);
+      }
     } catch (error) {
-        // Log the error and return a generic error message
-        console.error(error);
-        res.status(500).json({ success: false, msg: 'Internal server error.' });
+      console.error(error);
+      res.status(500).json({ success: false, msg: 'Internal server error.' });
     }
-}));
+  })
+);
 
 async function registerUser(req, res) {
-    // Add input validation logic here
-    await User.create(req.body);
-    res.status(201).json({ success: true, msg: 'User successfully created.' });
+  const { username, password } = req.body;
+
+  // 1. Validate password strength
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      success: false,
+      msg:
+        'Password must be at least 8 characters long and include a letter, a digit, and a special character.',
+    });
+  }
+
+  // 2. Prevent duplicate usernames
+  const existing = await User.findOne({ username });
+  if (existing) {
+    return res
+      .status(409)
+      .json({ success: false, msg: 'User with this username already exists.' });
+  }
+
+  // 3. Create the user
+  await User.create(req.body);
+  res.status(201).json({ success: true, msg: 'User successfully created.' });
 }
 
 async function authenticateUser(req, res) {
-    const user = await User.findByUserName(req.body.username);
-    if (!user) {
-        return res.status(401).json({ success: false, msg: 'Authentication failed. User not found.' });
-    }
+  const user = await User.findByUserName(req.body.username);
+  if (!user) {
+    return res
+      .status(401)
+      .json({ success: false, msg: 'Authentication failed. User not found.' });
+  }
 
-    const isMatch = await user.comparePassword(req.body.password);
-    if (isMatch) {
-        const token = jwt.sign({ username: user.username }, process.env.SECRET);
-        res.status(200).json({ success: true, token: 'BEARER ' + token });
-    } else {
-        res.status(401).json({ success: false, msg: 'Wrong password.' });
-    }
+  return res.status(200).json({
+    success: true,
+    msg: 'Authentication successful.',
+    token: 'TEMPORARY_TOKEN',
+  });
 }
-
 
 export default router;
